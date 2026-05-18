@@ -1,0 +1,35 @@
+:root {
+  --bg: #f4f6f7;
+  --surface: #ffffff;
+  --text: #162126;
+  --muted: #5c6971;
+  --line: #d4dbe0;
+  --accent: #2f5b6f;
+}
+* { box-sizing: border-box; }
+body { margin:0; font-family: Inter, system-ui, sans-serif; background:var(--bg); color:var(--text); }
+.nav { position:sticky; top:0; background:var(--surface); border-bottom:1px solid var(--line); padding:0 24px; display:flex; gap:24px; height:56px; align-items:center; }
+.nav-item { position:relative; font-weight:500; cursor:pointer; }
+.menu { display:none; position:absolute; top:34px; left:0; min-width:220px; background:var(--surface); border:1px solid var(--line); padding:8px; }
+.nav-item:hover .menu { display:block; }
+.menu a { display:block; text-decoration:none; color:var(--text); padding:8px 10px; border-radius:6px; }
+.menu a:hover, .menu a.active { background:#edf2f5; }
+.page { max-width:1100px; margin:32px auto; padding:0 20px 40px; }
+.card, .placeholder { background:var(--surface); border:1px solid var(--line); padding:18px; }
+.placeholder h1 { margin-top:0; }
+.muted { color:var(--muted); }
+.tag { display:inline-block; padding:2px 8px; border:1px solid var(--line); font-size:12px; color:var(--muted); margin-top:6px; }
+.toolbar { display:flex; gap:10px; flex-wrap:wrap; margin:14px 0 16px; }
+button, select, input, textarea { font:inherit; border:1px solid var(--line); background:#fff; color:var(--text); padding:7px 10px; }
+button:hover { border-color: var(--accent); }
+.grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:12px; }
+.course h3 { margin:0 0 8px; }
+.badges { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+.badge { font-size:12px; padding:3px 8px; border:1px solid var(--line); color:var(--muted); }
+.course { cursor:pointer; }
+.expanded { margin-top:14px; border-top:1px solid var(--line); padding-top:14px; }
+.row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
+.topics li { display:flex; gap:8px; margin:6px 0; }
+.resource-item { display:grid; grid-template-columns:1fr auto auto; gap:6px; align-items:center; margin:6px 0; }
+textarea { width:100%; min-height:80px; }
+.link { color:var(--accent); text-decoration:none; }
