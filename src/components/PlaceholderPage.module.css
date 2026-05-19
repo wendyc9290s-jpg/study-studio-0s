@@ -1,36 +1,55 @@
 .root {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: var(--space-5);
-  max-width: 640px;
+  max-width: 540px;
 }
 
-.title {
-  font-size: 22px;
-  font-weight: 600;
-  color: var(--text);
+.eyebrow {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  font-family: var(--font-mono);
   margin-bottom: var(--space-3);
 }
 
-.lead {
+.title {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  margin-bottom: var(--space-3);
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  margin-top: var(--space-5);
+}
+
+.cardLabel {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   color: var(--muted);
-  margin-bottom: var(--space-4);
-  font-size: 14px;
+  margin-bottom: var(--space-3);
 }
 
 .description {
-  color: var(--text);
-  font-size: 14px;
-  line-height: 1.6;
-  margin-bottom: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--muted);
+  line-height: 1.7;
 }
 
 .tag {
   display: inline-block;
-  font-size: 11px;
-  padding: 2px var(--space-2);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  color: var(--muted);
+  margin-top: var(--space-4);
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--subtle);
 }

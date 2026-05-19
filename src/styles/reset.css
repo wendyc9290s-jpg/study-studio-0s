@@ -6,11 +6,17 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  color-scheme: dark;
 }
 
 body {
-  line-height: 1.5;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.6;
+  background: var(--bg);
+  color: var(--text);
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 img, picture, video, canvas, svg {
@@ -20,6 +26,7 @@ img, picture, video, canvas, svg {
 
 input, button, textarea, select {
   font: inherit;
+  color: inherit;
 }
 
 p, h1, h2, h3, h4, h5, h6 {
@@ -28,4 +35,26 @@ p, h1, h2, h3, h4, h5, h6 {
 
 ul, ol {
   list-style: none;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius);
 }

@@ -1,26 +1,33 @@
 .root {
   display: inline-flex;
-  gap: 2px;
+  gap: 1px;
 }
 
 .star {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 13px;
   padding: 0 1px;
-  color: var(--muted);
+  color: var(--border-bright);
   line-height: 1;
-  transition: color 100ms;
+  transition: color var(--t-fast), transform var(--t-fast);
 }
 
-.star:hover,
-.starFilled {
-  color: var(--accent);
+.star:not(:disabled):hover {
+  transform: scale(1.2);
 }
 
 .star:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
   border-radius: 2px;
+}
+
+.starFilled {
+  color: var(--c-high);
+}
+
+.star:disabled {
+  cursor: default;
 }

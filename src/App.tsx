@@ -8,10 +8,12 @@ export default function App() {
   return (
     <BrowserRouter>
       <AppStateProvider>
-        <Nav />
-        <main className={styles.main}>
-          <AppRoutes />
-        </main>
+        <div className={styles.layout}>
+          <Nav />
+          <main className={styles.main}>
+            <AppRoutes />
+          </main>
+        </div>
       </AppStateProvider>
     </BrowserRouter>
   );

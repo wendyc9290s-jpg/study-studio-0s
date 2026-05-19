@@ -1,7 +1,6 @@
 import {
   createContext,
   useCallback,
-  useContext,
   useEffect,
   useRef,
   useState,
@@ -11,7 +10,7 @@ import type { AppState, Course, KeyTopic, Resource } from '../types';
 import { seed } from '../data/seed';
 import { loadState, saveState } from '../lib/storage';
 
-interface AppStateContextValue {
+export interface AppStateContextValue {
   state: AppState;
   updateCourse: (id: string, patch: Partial<Course>) => void;
   addKeyTopic: (courseId: string) => void;
@@ -23,7 +22,7 @@ interface AppStateContextValue {
   resetToSeed: () => void;
 }
 
-const AppStateContext = createContext<AppStateContextValue | null>(null);
+export const AppStateContext = createContext<AppStateContextValue | null>(null);
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppState>(() => {
@@ -115,35 +114,17 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
-  const replaceState = useCallback((next: AppState) => {
-    setState(next);
-  }, []);
-
-  const resetToSeed = useCallback(() => {
-    setState(structuredClone(seed));
-  }, []);
+  const replaceState = useCallback((next: AppState) => setState(next), []);
+  const resetToSeed  = useCallback(() => setState(structuredClone(seed)), []);
 
   return (
     <AppStateContext.Provider
       value={{
-        state,
-        updateCourse,
-        addKeyTopic,
-        updateKeyTopic,
-        deleteKeyTopic,
-        addResource,
-        deleteResource,
-        replaceState,
-        resetToSeed,
+        state, updateCourse, addKeyTopic, updateKeyTopic,
+        deleteKeyTopic, addResource, deleteResource, replaceState, resetToSeed,
       }}
     >
       {children}
     </AppStateContext.Provider>
   );
-}
-
-export function useAppState(): AppStateContextValue {
-  const ctx = useContext(AppStateContext);
-  if (!ctx) throw new Error('useAppState must be used inside AppStateProvider');
-  return ctx;
 }

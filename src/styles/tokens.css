@@ -1,19 +1,77 @@
 :root {
-  --bg: #f4f6f7;
-  --surface: #ffffff;
-  --text: #162126;
-  --muted: #5c6971;
-  --line: #d4dbe0;
-  --accent: #2f5b6f;
-  --accent-soft: #edf2f5;
+  /* ── Backgrounds ── */
+  --bg:           #0b0f14;
+  --surface:      #141820;
+  --surface-2:    #1a2030;
+  --surface-3:    #222840;
 
+  /* ── Borders ── */
+  --border:       #1e2a3a;
+  --border-bright:#2a3a50;
+  --line:         #1e2a3a;   /* legacy alias */
+
+  /* ── Text ── */
+  --text:         #e2e8f0;
+  --muted:        #94a3b8;
+  --subtle:       #4e6070;
+
+  /* ── Accent — cyan (finance terminal) ── */
+  --accent:       #22d3ee;
+  --accent-soft:  rgba(34, 211, 238, 0.10);
+  --accent-dim:   #06b6d4;
+
+  /* ── Status palette ── */
+  --c-not-started: #4e6070;
+  --c-previewing:  #60a5fa;
+  --c-studying:    #22d3ee;
+  --c-done:        #34d399;
+
+  /* ── Relevance ── */
+  --c-high:   #f59e0b;
+  --c-medium: #94a3b8;
+  --c-low:    #4e6070;
+
+  /* ── Danger ── */
+  --danger:       #f87171;
+  --danger-soft:  rgba(248, 113, 113, 0.10);
+
+  /* ── Typography ── */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, monospace;
+
+  /* ── Type scale ── */
+  --text-xs:   11px;
+  --text-sm:   13px;
+  --text-base: 14px;
+  --text-md:   15px;
+  --text-lg:   18px;
+  --text-xl:   22px;
+  --text-2xl:  28px;
+  --text-3xl:  36px;
+
+  /* ── Spacing ── */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
   --space-5: 24px;
   --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
 
-  --radius: 4px;
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  /* ── Shape ── */
+  --radius:    6px;
+  --radius-lg: 12px;
+
+  /* ── Layout ── */
+  --sidebar-width: 220px;
+
+  /* ── Transitions (duration only; ease is browser default) ── */
+  --t-fast: 100ms;
+  --t:      180ms;
+  --t-slow: 280ms;
+
+  /* ── Shadows ── */
+  --shadow:    0 2px 12px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
 }

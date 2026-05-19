@@ -9,10 +9,13 @@ interface PlaceholderPageProps {
 export function PlaceholderPage({ title, description, versionTag }: PlaceholderPageProps) {
   return (
     <div className={styles.root}>
+      <p className={styles.eyebrow}>Planned module</p>
       <h1 className={styles.title}>{title}</h1>
-      <p className={styles.lead}>This module is planned for a future version.</p>
-      <p className={styles.description}>{description}</p>
-      <span className={styles.tag}>{versionTag}</span>
+      <div className={styles.card}>
+        <p className={styles.cardLabel}>What this will do</p>
+        <p className={styles.description}>{description}</p>
+        <span className={styles.tag}>{versionTag}</span>
+      </div>
     </div>
   );
 }
