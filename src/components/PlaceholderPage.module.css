@@ -1,0 +1,36 @@
+.root {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--space-5);
+  max-width: 640px;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: var(--space-3);
+}
+
+.lead {
+  color: var(--muted);
+  margin-bottom: var(--space-4);
+  font-size: 14px;
+}
+
+.description {
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: var(--space-4);
+}
+
+.tag {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px var(--space-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--muted);
+}

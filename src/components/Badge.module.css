@@ -1,0 +1,17 @@
+.badge {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px var(--space-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.not-started { border-color: var(--line); }
+.previewing  { border-color: #a0b4c8; color: #4a7a9b; }
+.studying    { border-color: #a0c0a0; color: #3a7a3a; }
+.done        { border-color: #c0a0c0; color: #7a3a7a; }
+.high        { border-color: #c8b0a0; color: #8a5030; }
+.medium      { border-color: var(--line); }
+.low         { border-color: var(--line); opacity: 0.7; }
