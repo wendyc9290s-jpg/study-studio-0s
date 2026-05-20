@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import styles from './Nav.module.css';
 import { cn } from '../lib/escape';
+import { useTheme } from '../context/useTheme';
 
 interface NavItem {
   to: string;
@@ -48,6 +49,7 @@ function NavSection({ label, items }: { label: string; items: NavItem[] }) {
 }
 
 export function Nav() {
+  const { theme, toggle } = useTheme();
   return (
     <nav className={styles.sidebar} aria-label="Main navigation">
       <div className={styles.brand}>
@@ -63,6 +65,15 @@ export function Nav() {
       <NavSection label="Life"      items={LIFE} />
 
       <div className={styles.footer}>
+        <button
+          type="button"
+          className={styles.themeToggle}
+          onClick={toggle}
+          aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+        >
+          <span className={styles.themeIcon}>{theme === 'light' ? '☾' : '☀'}</span>
+          <span className={styles.themeLabel}>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
+        </button>
         <div className={styles.footerText}>Phase 1 · v0.1.0</div>
       </div>
     </nav>

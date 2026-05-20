@@ -29,3 +29,15 @@
 .pdf      { border-color: rgba(251, 191, 36, 0.4);  color: #fbbf24; background: rgba(251, 191, 36, 0.06); }
 .web      { border-color: rgba(52, 211, 153, 0.4);  color: #34d399; background: rgba(52, 211, 153, 0.06); }
 .note     { border-color: rgba(163, 113, 247, 0.4); color: #a371f7; background: rgba(163, 113, 247, 0.06); }
+
+/* ── Light theme overrides — darken colours for warm-light background ── */
+:global([data-theme="light"]) .previewing { background: rgba(47, 123, 237, 0.10); }
+:global([data-theme="light"]) .studying   { background: rgba(2, 117, 184, 0.10);  }
+:global([data-theme="light"]) .done       { background: rgba(7, 135, 94, 0.10);   }
+:global([data-theme="light"]) .high       { background: rgba(180, 83, 9, 0.09);   }
+
+:global([data-theme="light"]) .youtube  { color: #b91c1c; border-color: rgba(185,28,28,0.35);  background: rgba(185,28,28,0.07);  }
+:global([data-theme="light"]) .bilibili { color: #1d4ed8; border-color: rgba(29,78,216,0.35);  background: rgba(29,78,216,0.07);  }
+:global([data-theme="light"]) .pdf      { color: #92400e; border-color: rgba(146,64,14,0.35);  background: rgba(146,64,14,0.07);  }
+:global([data-theme="light"]) .web      { color: #0d7a56; border-color: rgba(13,122,86,0.35);  background: rgba(13,122,86,0.07);  }
+:global([data-theme="light"]) .note     { color: #6d28d9; border-color: rgba(109,40,217,0.35); background: rgba(109,40,217,0.07); }

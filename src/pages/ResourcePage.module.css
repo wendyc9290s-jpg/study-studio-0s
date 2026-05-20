@@ -140,6 +140,14 @@
 .typeBadge-excel    { background: rgba(52, 211, 153, 0.15);  color: #34d399; border-color: rgba(52,211,153,0.25); }
 .typeBadge-note     { background: rgba(245, 158, 11, 0.15);  color: var(--c-high); border-color: rgba(245,158,11,0.25); }
 
+/* ── Light mode overrides ── */
+:global([data-theme="light"]) .typeBadge-youtube  { color: #b91c1c; background: rgba(185,28,28,0.08);    border-color: rgba(185,28,28,0.25);  }
+:global([data-theme="light"]) .typeBadge-bilibili { color: #1d4ed8; background: rgba(29,78,216,0.08);    border-color: rgba(29,78,216,0.25);  }
+:global([data-theme="light"]) .typeBadge-web      { color: var(--accent); background: var(--accent-soft); border-color: rgba(41,82,200,0.25);  }
+:global([data-theme="light"]) .typeBadge-excel    { color: #0d7a56; background: rgba(13,122,86,0.08);    border-color: rgba(13,122,86,0.25);  }
+:global([data-theme="light"]) .typeBadge-note     { color: #92400e; background: rgba(146,64,14,0.08);    border-color: rgba(146,64,14,0.25);  }
+:global([data-theme="light"]) .doneBtnActive      { background: rgba(7,135,94,0.12); border-color: rgba(7,135,94,0.3); color: #07875e; }
+
 /* ── Resource title ──────────────────────────────────────────── */
 
 .resourceTitle {
