@@ -1,0 +1,255 @@
+/* ── Page layout ──────────────────────────────────────────────────────────── */
+.page {
+  padding: 2rem 2.5rem 4rem;
+  max-width: 1320px;
+  margin: 0 auto;
+}
+
+.pageHeader {
+  margin-bottom: 2.5rem;
+}
+
+.pageTitle {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin: 0 0 0.35rem;
+}
+
+.pageSubtitle {
+  font-size: 0.875rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* ── Three-column grid ────────────────────────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .grid { grid-template-columns: 1fr; }
+  .page { padding: 1.5rem 1.25rem 3rem; }
+}
+
+/* ── Column ───────────────────────────────────────────────────────────────── */
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+/* accent line at top of column */
+.column[data-area="mind"]  { --col-accent: var(--accent); }
+.column[data-area="dream"] { --col-accent: var(--c-high); }
+.column[data-area="joy"]   { --col-accent: var(--c-done); }
+
+.columnHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.625rem;
+  border-bottom: 1.5px solid var(--col-accent);
+}
+
+.columnIcon {
+  font-size: 1rem;
+  color: var(--col-accent);
+  line-height: 1;
+}
+
+.columnTitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+  flex: 1;
+}
+
+.columnCount {
+  font-size: 0.75rem;
+  color: var(--muted);
+  background: var(--surface-2);
+  border-radius: 100px;
+  padding: 0.1rem 0.55rem;
+  line-height: 1.6;
+}
+
+/* ── Input card ───────────────────────────────────────────────────────────── */
+.inputCard {
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--col-accent);
+  border-radius: 12px;
+  padding: 0.875rem;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.inputArea {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--text);
+  font-family: inherit;
+  padding: 0;
+}
+
+.inputArea::placeholder {
+  color: var(--subtle);
+}
+
+.inputFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.inputHint {
+  font-size: 0.72rem;
+  color: var(--subtle);
+}
+
+.addBtn {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.3rem 0.9rem;
+  border-radius: 6px;
+  border: 1px solid var(--col-accent);
+  background: transparent;
+  color: var(--col-accent);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.addBtn:hover:not(:disabled) {
+  background: var(--col-accent);
+  color: #fff;
+}
+
+.addBtn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* ── Entry cards ──────────────────────────────────────────────────────────── */
+.entries {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.entryCard {
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.75rem 0.875rem;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+.entryCard:hover {
+  box-shadow: var(--shadow);
+  border-color: var(--border-bright);
+}
+
+.entryCard[data-status="done"] {
+  opacity: 0.55;
+}
+
+.entryCard[data-status="done"] .entryText {
+  text-decoration: line-through;
+}
+
+.entryCard[data-energy="low"] {
+  border-left: 2.5px solid var(--subtle);
+}
+
+.entryText {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--text);
+  margin: 0 0 0.375rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.entrySuggestion {
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-style: italic;
+  margin: 0 0 0.5rem;
+}
+
+.entryFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.entryTime {
+  font-size: 0.72rem;
+  color: var(--subtle);
+}
+
+.entryActions {
+  display: flex;
+  gap: 0.125rem;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.entryCard:hover .entryActions {
+  opacity: 1;
+}
+
+.actionBtn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--subtle);
+  padding: 0.2rem 0.35rem;
+  border-radius: 5px;
+  line-height: 1;
+  transition: color 0.12s, background 0.12s;
+}
+
+.actionBtn:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.actionBtn[data-active="true"] {
+  color: var(--col-accent);
+}
+
+/* ── Light mode overrides ─────────────────────────────────────────────────── */
+:global([data-theme="light"]) .inputCard {
+  background: rgba(253, 250, 246, 0.9);
+  border-color: #d8d0c4;
+  border-top-color: var(--col-accent);
+}
+
+:global([data-theme="light"]) .entryCard {
+  background: rgba(253, 250, 246, 0.85);
+  border-color: #d8d0c4;
+}
+
+:global([data-theme="light"]) .entryCard:hover {
+  border-color: #bfb5a6;
+}

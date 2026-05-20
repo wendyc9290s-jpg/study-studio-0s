@@ -8,10 +8,10 @@ import { ResourcePage } from './pages/ResourcePage';
 import { StudyModesPage } from './pages/StudyModesPage';
 import {
   AiPlaceholder,
-  BrainDumpPlaceholder,
   TravelPlaceholder,
   UploadPlaceholder,
 } from './pages/placeholders';
+import { LifePage } from './pages/LifePage';
 
 export function AppRoutes() {
   return (
@@ -26,7 +26,7 @@ export function AppRoutes() {
       <Route path="/study/modes" element={<StudyModesPage />} />
       <Route path="/study/ai" element={<AiPlaceholder />} />
       <Route path="/life/travel" element={<TravelPlaceholder />} />
-      <Route path="/life/braindump" element={<BrainDumpPlaceholder />} />
+      <Route path="/life/braindump" element={<LifePage />} />
     </Routes>
   );
 }

@@ -26,7 +26,7 @@ const STUDY: NavItem[] = [
 
 const LIFE: NavItem[] = [
   { to: '/life/travel',    label: 'Travel & Rest', icon: '◇' },
-  { to: '/life/braindump', label: 'Brain Dump',    icon: '◻' },
+  { to: '/life/braindump', label: 'Life',           icon: '◻' },
 ];
 
 function NavSection({ label, items }: { label: string; items: NavItem[] }) {

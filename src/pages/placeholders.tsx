@@ -30,12 +30,3 @@ export function TravelPlaceholder() {
   );
 }
 
-export function BrainDumpPlaceholder() {
-  return (
-    <PlaceholderPage
-      title="Brain Dump"
-      description="Quick capture for stray thoughts, todos, and life admin."
-      versionTag="v0.2"
-    />
-  );
-}
