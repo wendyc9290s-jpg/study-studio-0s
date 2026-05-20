@@ -8,10 +8,11 @@ import { cn } from '../lib/escape';
 import styles from './AccaPage.module.css';
 
 const GROUPS: AccaGroup[] = [
-  'Applied Knowledge',
-  'Applied Skills',
+  'Foundations',
+  'Knowledge',
+  'Expertise',
   'Strategic Professional',
-  'Strategic Professional Optional',
+  'Strategic Professional Options',
 ];
 
 const STATUS_ORDER: CourseStatus[] = ['not-started', 'previewing', 'studying', 'done'];

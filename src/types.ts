@@ -74,7 +74,7 @@ export interface CfaState {
 
 // ── ACCA ──────────────────────────────────────────────────────────────────
 
-export type AccaGroup    = 'Applied Knowledge' | 'Applied Skills' | 'Strategic Professional' | 'Strategic Professional Optional';
+export type AccaGroup    = 'Foundations' | 'Knowledge' | 'Expertise' | 'Strategic Professional' | 'Strategic Professional Options';
 export type AccaPriority = 'high' | 'medium' | 'low';
 
 export interface AccaPaper {
