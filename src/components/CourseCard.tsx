@@ -56,41 +56,66 @@ function AddResourceForm({ courseId }: AddResourceFormProps) {
 }
 
 interface TopicRowProps {
-  topic: { id: string; text: string; done: boolean };
-  onCheck: (done: boolean) => void;
-  onDelete: () => void;
-  onBlur:   (text: string) => void;
+  topic: { id: string; text: string; done: boolean; notes?: string; topicConfidence?: 0|1|2|3|4|5 };
+  onCheck:      (done: boolean) => void;
+  onDelete:     () => void;
+  onTextBlur:   (text: string) => void;
+  onNotesBlur:  (notes: string) => void;
+  onConfidence: (v: 0|1|2|3|4|5) => void;
 }
 
-function TopicRow({ topic, onCheck, onDelete, onBlur }: TopicRowProps) {
-  const [localText, setLocalText] = useState(topic.text);
-  const [focused,   setFocused]   = useState(false);
+function TopicRow({ topic, onCheck, onDelete, onTextBlur, onNotesBlur, onConfidence }: TopicRowProps) {
+  const [localText,  setLocalText]  = useState(topic.text);
+  const [localNotes, setLocalNotes] = useState(topic.notes ?? '');
+  const [textFocused,  setTextFocused]  = useState(false);
+  const [notesFocused, setNotesFocused] = useState(false);
 
-  useEffect(() => {
-    if (!focused) setLocalText(topic.text);
-  }, [topic.text, focused]);
+  useEffect(() => { if (!textFocused)  setLocalText(topic.text);          }, [topic.text,  textFocused]);
+  useEffect(() => { if (!notesFocused) setLocalNotes(topic.notes ?? '');  }, [topic.notes, notesFocused]);
+
+  const conf = (topic.topicConfidence ?? 0) as 0|1|2|3|4|5;
 
   return (
-    <li className={styles.topicRow}>
-      <input
-        type="checkbox"
-        className={styles.topicCheckbox}
-        checked={topic.done}
-        onChange={e => { e.stopPropagation(); onCheck(e.target.checked); }}
-        onClick={e => e.stopPropagation()}
-      />
+    <li className={styles.topicItem}>
+      <div className={styles.topicRow}>
+        <input
+          type="checkbox"
+          className={styles.topicCheckbox}
+          checked={topic.done}
+          onChange={e => { e.stopPropagation(); onCheck(e.target.checked); }}
+          onClick={e => e.stopPropagation()}
+        />
+        <input
+          type="text"
+          className={styles.topicInput}
+          value={localText}
+          onChange={e => setLocalText(e.target.value)}
+          onFocus={() => setTextFocused(true)}
+          onBlur={() => { setTextFocused(false); if (localText !== topic.text) onTextBlur(localText); }}
+          onClick={e => e.stopPropagation()}
+        />
+        <span className={styles.topicConf} onClick={e => e.stopPropagation()}>
+          {([1,2,3,4,5] as const).map(n => (
+            <button
+              key={n}
+              type="button"
+              className={cn(styles.confStar, n <= conf ? styles.confStarFilled : undefined)}
+              onClick={e => { e.stopPropagation(); onConfidence(n as 0|1|2|3|4|5); }}
+            >★</button>
+          ))}
+        </span>
+        <button type="button" className={styles.deleteBtn} onClick={e => { e.stopPropagation(); onDelete(); }}>×</button>
+      </div>
       <input
         type="text"
-        className={styles.topicInput}
-        value={localText}
-        onChange={e => setLocalText(e.target.value)}
-        onFocus={() => setFocused(true)}
-        onBlur={() => { setFocused(false); if (localText !== topic.text) onBlur(localText); }}
+        className={styles.topicNotes}
+        placeholder="Add note…"
+        value={localNotes}
+        onChange={e => setLocalNotes(e.target.value)}
+        onFocus={() => setNotesFocused(true)}
+        onBlur={() => { setNotesFocused(false); if (localNotes !== (topic.notes ?? '')) onNotesBlur(localNotes); }}
         onClick={e => e.stopPropagation()}
       />
-      <button type="button" className={styles.deleteBtn} onClick={e => { e.stopPropagation(); onDelete(); }}>
-        ×
-      </button>
     </li>
   );
 }
@@ -185,9 +210,11 @@ export function CourseCard({ course }: CourseCardProps) {
               <TopicRow
                 key={topic.id}
                 topic={topic}
-                onCheck={done => updateKeyTopic(course.id, topic.id, { done })}
+                onCheck={done  => updateKeyTopic(course.id, topic.id, { done })}
                 onDelete={() => deleteKeyTopic(course.id, topic.id)}
-                onBlur={text => updateKeyTopic(course.id, topic.id, { text })}
+                onTextBlur={text   => updateKeyTopic(course.id, topic.id, { text })}
+                onNotesBlur={notes => updateKeyTopic(course.id, topic.id, { notes })}
+                onConfidence={v    => updateKeyTopic(course.id, topic.id, { topicConfidence: v })}
               />
             ))}
           </ul>
