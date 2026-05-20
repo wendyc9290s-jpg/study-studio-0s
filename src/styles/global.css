@@ -1,0 +1,19 @@
+:root {
+  --bg: #f4f6f7;
+  --surface: #ffffff;
+  --text: #162126;
+  --muted: #5c6971;
+  --line: #d4dbe0;
+}
+
+:root[data-theme='dark'] {
+  --bg: #101619;
+  --surface: #172127;
+  --text: #e7edf0;
+  --muted: #9fb0ba;
+  --line: #2e404a;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Inter, system-ui, sans-serif; background: var(--bg); color: var(--text); }
+button, input, textarea, select { font: inherit; }

@@ -1,0 +1,4 @@
+.placeholder { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 20px; }
+.placeholder h1 { margin-top: 0; }
+.placeholder p { color: var(--muted); }
+.placeholder span { display: inline-block; margin-top: 8px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; font-size: 12px; }

@@ -1,0 +1,7 @@
+.layout { min-height: 100vh; background: var(--bg); color: var(--text); }
+.nav { height: 56px; border-bottom: 1px solid var(--line); background: var(--surface); display: flex; gap: 20px; align-items: center; padding: 0 20px; }
+.nav a { color: var(--text); text-decoration: none; }
+.group { position: relative; display: flex; align-items: center; gap: 6px; cursor: default; }
+.menu { display: none; position: absolute; top: 28px; left: 0; min-width: 220px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px; }
+.group:hover .menu { display: grid; gap: 4px; }
+.main { max-width: 1120px; margin: 26px auto; padding: 0 18px 30px; }
