@@ -20,13 +20,4 @@ export function AiPlaceholder() {
   );
 }
 
-export function TravelPlaceholder() {
-  return (
-    <PlaceholderPage
-      title="Travel & Rest"
-      description="Travel destinations, dates, and budget. Will integrate with the 4-Month Plan to auto-adjust workload."
-      versionTag="v0.2"
-    />
-  );
-}
 
