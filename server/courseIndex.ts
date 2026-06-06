@@ -1,7 +1,7 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
-const COURSE_ROOT = process.env.AF_COURSE_ROOT ?? '/Users/wendy/Desktop/UOB AF';
+export const COURSE_ROOT = process.env.AF_COURSE_ROOT ?? '/Users/wendy/Desktop/UOB AF';
 
 type MaterialType = 'pdf' | 'pptx';
 type NoteType = 'docx';
@@ -220,4 +220,10 @@ export async function buildCourseIndex(): Promise<CourseIndex> {
     generatedAt: new Date().toISOString(),
     courses,
   };
+}
+
+export function isInsideCourseRoot(filePath: string): boolean {
+  const resolvedRoot = path.resolve(COURSE_ROOT);
+  const resolvedFile = path.resolve(filePath);
+  return resolvedFile === resolvedRoot || resolvedFile.startsWith(`${resolvedRoot}${path.sep}`);
 }

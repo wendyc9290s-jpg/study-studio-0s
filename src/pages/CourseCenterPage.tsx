@@ -48,6 +48,10 @@ function fileBadge(type: string): string {
   return type.toUpperCase();
 }
 
+function previewUrl(filePath: string): string {
+  return `/api/course-file?path=${encodeURIComponent(filePath)}`;
+}
+
 export function CourseCenterPage() {
   const [loadState, setLoadState] = useState<LoadState>({ status: 'loading' });
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
@@ -160,47 +164,82 @@ export function CourseCenterPage() {
           ))}
         </aside>
 
-        <section className={styles.detail}>
+        <section className={styles.workspace}>
           {selectedCourse && selectedLesson ? (
             <>
-              <div className={styles.detailHeader}>
+              <div className={styles.workspaceHeader}>
                 <div>
                   <p className={styles.kicker}>{selectedCourse.title}</p>
                   <h2 className={styles.lessonHeading}>{selectedLesson.title}</h2>
                 </div>
-                <span className={styles.orderBadge}>Lesson {selectedLesson.order}</span>
+                <div className={styles.headerActions}>
+                  <span className={styles.orderBadge}>Lesson {selectedLesson.order}</span>
+                  <span className={styles.orderBadge}>
+                    {selectedLesson.material ? fileBadge(selectedLesson.material.type) : 'No slides'} / {selectedLesson.notes ? 'DOCX' : 'No notes'}
+                  </span>
+                </div>
               </div>
 
-              <div className={styles.pairGrid}>
-                <div className={styles.assetPanel}>
-                  <div className={styles.assetTop}>
-                    <span className={styles.assetLabel}>Lecture Material</span>
+              <div className={styles.splitWorkspace}>
+                <section className={styles.viewerPane} aria-label="Lecture material preview">
+                  <div className={styles.paneToolbar}>
+                    <div>
+                      <span className={styles.assetLabel}>Lecture Material</span>
+                      <p className={styles.assetName}>{selectedLesson.material?.fileName ?? 'No matched material'}</p>
+                    </div>
                     <span className={styles.assetType}>{selectedLesson.material ? fileBadge(selectedLesson.material.type) : 'Missing'}</span>
                   </div>
-                  {selectedLesson.material ? (
-                    <>
-                      <p className={styles.assetName}>{selectedLesson.material.fileName}</p>
-                      <p className={styles.pathText}>{selectedLesson.material.path}</p>
-                    </>
-                  ) : (
-                    <p className={styles.emptyText}>No lecture material matched this lesson.</p>
-                  )}
-                </div>
 
-                <div className={styles.assetPanel}>
-                  <div className={styles.assetTop}>
-                    <span className={styles.assetLabel}>Notes</span>
+                  {selectedLesson.material?.type === 'pdf' && (
+                    <iframe
+                      className={styles.pdfFrame}
+                      title={`${selectedLesson.title} PDF preview`}
+                      src={previewUrl(selectedLesson.material.path)}
+                    />
+                  )}
+
+                  {selectedLesson.material?.type === 'pptx' && (
+                    <div className={styles.previewPlaceholder}>
+                      <div className={styles.placeholderTitle}>PPTX preview pending</div>
+                      <p>
+                        This lesson is matched. The next preview step is converting this PPTX into a local PDF under data/previews.
+                      </p>
+                      <p className={styles.pathText}>{selectedLesson.material.path}</p>
+                    </div>
+                  )}
+
+                  {!selectedLesson.material && (
+                    <div className={styles.previewPlaceholder}>
+                      <div className={styles.placeholderTitle}>No lecture material</div>
+                      <p>No lecture material matched this lesson.</p>
+                    </div>
+                  )}
+                </section>
+
+                <section className={styles.notesPane} aria-label="Lesson notes">
+                  <div className={styles.paneToolbar}>
+                    <div>
+                      <span className={styles.assetLabel}>Notes</span>
+                      <p className={styles.assetName}>{selectedLesson.notes?.fileName ?? 'No matched notes'}</p>
+                    </div>
                     <span className={styles.assetType}>{selectedLesson.notes ? 'DOCX' : 'Missing'}</span>
                   </div>
+
                   {selectedLesson.notes ? (
-                    <>
-                      <p className={styles.assetName}>{selectedLesson.notes.fileName}</p>
+                    <div className={styles.notesPlaceholder}>
+                      <div className={styles.placeholderTitle}>Notes editor pending</div>
+                      <p>
+                        This DOCX is paired with the lesson. The next notes stage will import it into a local editable note with autosave.
+                      </p>
                       <p className={styles.pathText}>{selectedLesson.notes.path}</p>
-                    </>
+                    </div>
                   ) : (
-                    <p className={styles.emptyText}>No notes document matched this lesson.</p>
+                    <div className={styles.notesPlaceholder}>
+                      <div className={styles.placeholderTitle}>No notes document</div>
+                      <p>No notes document matched this lesson.</p>
+                    </div>
                   )}
-                </div>
+                </section>
               </div>
 
               {selectedCourse.extras.length > 0 && (
