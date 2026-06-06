@@ -123,6 +123,7 @@ export function CourseCenterPage() {
   const [noteColor, setNoteColor] = useState('#f59e0b');
   const [noteHighlight, setNoteHighlight] = useState('#fde68a');
   const [pptxPreview, setPptxPreview] = useState<PptxPreviewState>({ status: 'idle' });
+  const [exportState, setExportState] = useState<SaveState>('idle');
   const [draftAnnotation, setDraftAnnotation] = useState<Annotation | null>(null);
   const annotationSurfaceRef = useRef<HTMLDivElement>(null);
   const noteEditorRef = useRef<HTMLDivElement>(null);
@@ -479,6 +480,64 @@ export function CourseCenterPage() {
     }
   }
 
+  function currentPreviewSourceUrl(): string | null {
+    if (!selectedLesson?.material) return null;
+    if (selectedLesson.material.type === 'pdf') return previewUrl(selectedLesson.material.path);
+    if (selectedLesson.material.type === 'pptx' && pptxPreview.status === 'ready') return pptxPreview.url;
+    return null;
+  }
+
+  async function exportCurrentNote() {
+    if (!selectedLesson) return;
+    setExportState('saving');
+    try {
+      const response = await fetch('/api/export-note', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lessonId: selectedLesson.id,
+          title: selectedLesson.title,
+          content: noteEditorRef.current?.innerHTML ?? noteContent,
+        }),
+      });
+      if (!response.ok) throw new Error('Word export failed.');
+      const result = (await response.json()) as { url: string };
+      window.open(result.url, '_blank', 'noopener,noreferrer');
+      setExportState('saved');
+    } catch {
+      setExportState('error');
+    }
+  }
+
+  async function exportCurrentAnnotatedPdfView() {
+    if (!selectedLesson) return;
+    const sourceUrl = currentPreviewSourceUrl();
+    if (!sourceUrl) {
+      window.alert('Convert this lesson to a PDF preview first.');
+      return;
+    }
+
+    setExportState('saving');
+    try {
+      const response = await fetch('/api/export-annotated', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lessonId: selectedLesson.id,
+          title: selectedLesson.title,
+          sourceUrl,
+          annotations,
+        }),
+      });
+      if (!response.ok) throw new Error('Annotated export failed.');
+      const result = (await response.json()) as { url: string };
+      window.open(result.url, '_blank', 'noopener,noreferrer');
+      setExportState('saved');
+    } catch {
+      setExportState('error');
+    }
+  }
+
   function renderAnnotation(annotation: Annotation) {
     if (annotation.type === 'pen') {
       return (
@@ -596,6 +655,12 @@ export function CourseCenterPage() {
                   <h2 className={styles.lessonHeading}>{selectedLesson.title}</h2>
                 </div>
                 <div className={styles.headerActions}>
+                  <button type="button" className={styles.headerButton} onClick={exportCurrentNote} disabled={!selectedLesson.notes || exportState === 'saving'}>
+                    Export Word
+                  </button>
+                  <button type="button" className={styles.headerButton} onClick={exportCurrentAnnotatedPdfView} disabled={!currentPreviewSourceUrl() || exportState === 'saving'}>
+                    Export Annotated PDF
+                  </button>
                   <span className={styles.orderBadge}>Lesson {selectedLesson.order}</span>
                   <span className={styles.orderBadge}>
                     {selectedLesson.material ? fileBadge(selectedLesson.material.type) : 'No slides'} / {selectedLesson.notes ? 'DOCX' : 'No notes'}

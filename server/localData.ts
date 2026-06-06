@@ -25,6 +25,14 @@ export function previewPdfUrl(lessonId: string): string {
   return `/api/preview-file?id=${encodeURIComponent(lessonId)}`;
 }
 
+export function exportFilePath(fileName: string): string {
+  return path.join(DATA_ROOT, 'exports', safeFileName(fileName));
+}
+
+export function exportFileUrl(fileName: string): string {
+  return `/api/export-file?file=${encodeURIComponent(safeFileName(fileName))}`;
+}
+
 export async function jsonDataExists(kind: DataKind, lessonId: string): Promise<boolean> {
   try {
     await fs.access(dataPath(kind, lessonId));

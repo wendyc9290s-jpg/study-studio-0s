@@ -4,10 +4,12 @@ import { createReadStream } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import { buildCourseIndex, isInsideCourseRoot } from './server/courseIndex';
 import { importDocxAsHtml } from './server/docxImport';
+import { exportAnnotatedHtml, exportNoteDocx } from './server/exportArtifacts';
 import { convertPptxPreview, getPptxPreview } from './server/pptxPreview';
 import {
   attachmentPath,
   ensureDataDirs,
+  exportFilePath,
   jsonDataExists,
   readJsonData,
   previewPdfPath,
@@ -275,6 +277,90 @@ export default defineConfig({
           } catch (error) {
             sendJson(res, 500, {
               error: error instanceof Error ? error.message : 'Failed to handle attachment.',
+            });
+          }
+        });
+
+        server.middlewares.use('/api/export-note', async (req, res) => {
+          try {
+            if (req.method !== 'POST') {
+              sendJson(res, 405, { error: 'Method not allowed.' });
+              return;
+            }
+
+            const body = await readRequestJson<{ lessonId?: string; title?: string; content?: string }>(req);
+            if (!body.lessonId) {
+              sendJson(res, 400, { error: 'Missing lesson id.' });
+              return;
+            }
+
+            const result = await exportNoteDocx({
+              lessonId: body.lessonId,
+              title: body.title ?? body.lessonId,
+              content: body.content ?? '',
+            });
+            sendJson(res, 200, result);
+          } catch (error) {
+            sendJson(res, 500, {
+              error: error instanceof Error ? error.message : 'Failed to export Word.',
+            });
+          }
+        });
+
+        server.middlewares.use('/api/export-annotated', async (req, res) => {
+          try {
+            if (req.method !== 'POST') {
+              sendJson(res, 405, { error: 'Method not allowed.' });
+              return;
+            }
+
+            const body = await readRequestJson<{
+              lessonId?: string;
+              title?: string;
+              sourceUrl?: string;
+              annotations?: unknown[];
+            }>(req);
+            if (!body.lessonId || !body.sourceUrl) {
+              sendJson(res, 400, { error: 'Missing annotated export payload.' });
+              return;
+            }
+
+            const result = await exportAnnotatedHtml({
+              lessonId: body.lessonId,
+              title: body.title ?? body.lessonId,
+              sourceUrl: body.sourceUrl,
+              annotations: Array.isArray(body.annotations) ? body.annotations as never[] : [],
+            });
+            sendJson(res, 200, result);
+          } catch (error) {
+            sendJson(res, 500, {
+              error: error instanceof Error ? error.message : 'Failed to export annotated PDF view.',
+            });
+          }
+        });
+
+        server.middlewares.use('/api/export-file', async (req, res) => {
+          try {
+            const url = new URL(req.url ?? '', 'http://localhost');
+            const file = url.searchParams.get('file');
+            if (!file) {
+              sendJson(res, 400, { error: 'Missing export file.' });
+              return;
+            }
+            const filePath = exportFilePath(file);
+            const fileStat = await stat(filePath);
+            const lower = file.toLowerCase();
+            const contentType = lower.endsWith('.docx')
+              ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+              : 'text/html; charset=utf-8';
+            res.statusCode = 200;
+            res.setHeader('Content-Type', contentType);
+            res.setHeader('Content-Length', String(fileStat.size));
+            res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(file)}"`);
+            createReadStream(filePath).pipe(res);
+          } catch (error) {
+            sendJson(res, 404, {
+              error: error instanceof Error ? error.message : 'Export file not found.',
             });
           }
         });
