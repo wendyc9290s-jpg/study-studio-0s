@@ -46,6 +46,10 @@ type LoadState =
 
 type AnnotationTool = 'select' | 'pen' | 'highlight' | 'text';
 type SaveState = 'idle' | 'loading' | 'saving' | 'saved' | 'error';
+type PptxPreviewState =
+  | { status: 'idle' | 'missing' | 'converting' }
+  | { status: 'ready'; url: string; method?: string }
+  | { status: 'error'; message: string };
 
 interface Point {
   x: number;
@@ -118,6 +122,7 @@ export function CourseCenterPage() {
   const [annotationColor, setAnnotationColor] = useState('#f59e0b');
   const [noteColor, setNoteColor] = useState('#f59e0b');
   const [noteHighlight, setNoteHighlight] = useState('#fde68a');
+  const [pptxPreview, setPptxPreview] = useState<PptxPreviewState>({ status: 'idle' });
   const [draftAnnotation, setDraftAnnotation] = useState<Annotation | null>(null);
   const annotationSurfaceRef = useRef<HTMLDivElement>(null);
   const noteEditorRef = useRef<HTMLDivElement>(null);
@@ -197,6 +202,39 @@ export function CourseCenterPage() {
     }
 
     loadNote();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedLesson]);
+
+  useEffect(() => {
+    if (selectedLesson?.material?.type !== 'pptx') {
+      setPptxPreview({ status: 'idle' });
+      return;
+    }
+
+    const lessonId = selectedLesson.id;
+    let cancelled = false;
+    setPptxPreview({ status: 'idle' });
+
+    async function loadPreviewStatus() {
+      try {
+        const response = await fetch(`/api/pptx-preview?id=${encodeURIComponent(lessonId)}`);
+        if (!response.ok) throw new Error('Could not load PPTX preview status');
+        const payload = (await response.json()) as { status: 'ready' | 'missing'; url?: string; method?: string };
+        if (cancelled) return;
+        if (payload.status === 'ready' && payload.url) {
+          setPptxPreview({ status: 'ready', url: payload.url, method: payload.method });
+        } else {
+          setPptxPreview({ status: 'missing' });
+        }
+      } catch {
+        if (!cancelled) setPptxPreview({ status: 'error', message: 'Could not check PPTX preview.' });
+      }
+    }
+
+    loadPreviewStatus();
 
     return () => {
       cancelled = true;
@@ -415,6 +453,32 @@ export function CourseCenterPage() {
     uploadAndInsertImage(image);
   }
 
+  async function convertSelectedPptx() {
+    if (selectedLesson?.material?.type !== 'pptx') return;
+    setPptxPreview({ status: 'converting' });
+    try {
+      const response = await fetch('/api/pptx-preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lessonId: selectedLesson.id,
+          sourcePath: selectedLesson.material.path,
+        }),
+      });
+      if (!response.ok) {
+        const payload = (await response.json()) as { error?: string };
+        throw new Error(payload.error ?? 'PPTX conversion failed.');
+      }
+      const payload = (await response.json()) as { url: string; method?: string };
+      setPptxPreview({ status: 'ready', url: payload.url, method: payload.method });
+    } catch (error) {
+      setPptxPreview({
+        status: 'error',
+        message: error instanceof Error ? error.message : 'PPTX conversion failed.',
+      });
+    }
+  }
+
   function renderAnnotation(annotation: Annotation) {
     if (annotation.type === 'pen') {
       return (
@@ -552,7 +616,7 @@ export function CourseCenterPage() {
                     </div>
                   </div>
 
-                  {selectedLesson.material?.type === 'pdf' && (
+                  {(selectedLesson.material?.type === 'pdf' || (selectedLesson.material?.type === 'pptx' && pptxPreview.status === 'ready')) && (
                     <>
                       <div className={styles.annotationToolbar} aria-label="PDF annotation tools">
                         {(['select', 'pen', 'highlight', 'text'] as const).map(tool => (
@@ -591,7 +655,7 @@ export function CourseCenterPage() {
                         <iframe
                           className={styles.pdfFrame}
                           title={`${selectedLesson.title} PDF preview`}
-                          src={previewUrl(selectedLesson.material.path)}
+                          src={selectedLesson.material.type === 'pdf' ? previewUrl(selectedLesson.material.path) : pptxPreview.status === 'ready' ? pptxPreview.url : ''}
                         />
                         <svg className={styles.annotationLayer} viewBox="0 0 100 100" preserveAspectRatio="none">
                           {annotations.map(renderAnnotation)}
@@ -601,13 +665,24 @@ export function CourseCenterPage() {
                     </>
                   )}
 
-                  {selectedLesson.material?.type === 'pptx' && (
+                  {selectedLesson.material?.type === 'pptx' && pptxPreview.status !== 'ready' && (
                     <div className={styles.previewPlaceholder}>
-                      <div className={styles.placeholderTitle}>PPTX preview pending</div>
-                      <p>
-                        This lesson is matched. The next preview step is converting this PPTX into a local PDF under data/previews.
+                      <div className={styles.placeholderTitle}>
+                        {pptxPreview.status === 'converting' ? 'Converting PPTX' : 'PPTX preview pending'}
+                      </div>
+                      <p>{pptxPreview.status === 'error'
+                        ? pptxPreview.message
+                        : 'Convert this PowerPoint into a local PDF preview under data/previews, then use the same PDF annotation tools.'}
                       </p>
                       <p className={styles.pathText}>{selectedLesson.material.path}</p>
+                      <button
+                        type="button"
+                        className={styles.convertButton}
+                        onClick={convertSelectedPptx}
+                        disabled={pptxPreview.status === 'converting'}
+                      >
+                        {pptxPreview.status === 'converting' ? 'Converting...' : 'Convert to PDF preview'}
+                      </button>
                     </div>
                   )}
 

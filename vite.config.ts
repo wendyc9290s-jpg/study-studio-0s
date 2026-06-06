@@ -4,11 +4,13 @@ import { createReadStream } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import { buildCourseIndex, isInsideCourseRoot } from './server/courseIndex';
 import { importDocxAsHtml } from './server/docxImport';
+import { convertPptxPreview, getPptxPreview } from './server/pptxPreview';
 import {
   attachmentPath,
   ensureDataDirs,
   jsonDataExists,
   readJsonData,
+  previewPdfPath,
   writeAttachment,
   writeJsonData,
 } from './server/localData';
@@ -65,6 +67,68 @@ export default defineConfig({
           } catch (error) {
             sendJson(res, 404, {
               error: error instanceof Error ? error.message : 'File not found.',
+            });
+          }
+        });
+
+        server.middlewares.use('/api/preview-file', async (req, res) => {
+          try {
+            const url = new URL(req.url ?? '', 'http://localhost');
+            const lessonId = url.searchParams.get('id');
+            if (!lessonId) {
+              sendJson(res, 400, { error: 'Missing lesson id.' });
+              return;
+            }
+
+            const filePath = previewPdfPath(lessonId);
+            const fileStat = await stat(filePath);
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Length', String(fileStat.size));
+            res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(`${lessonId}.pdf`)}"`);
+            createReadStream(filePath).pipe(res);
+          } catch (error) {
+            sendJson(res, 404, {
+              error: error instanceof Error ? error.message : 'Preview file not found.',
+            });
+          }
+        });
+
+        server.middlewares.use('/api/pptx-preview', async (req, res) => {
+          try {
+            if (req.method === 'GET') {
+              const url = new URL(req.url ?? '', 'http://localhost');
+              const lessonId = url.searchParams.get('id');
+              if (!lessonId) {
+                sendJson(res, 400, { error: 'Missing lesson id.' });
+                return;
+              }
+              const preview = await getPptxPreview(lessonId);
+              sendJson(res, 200, preview
+                ? { status: 'ready', ...preview }
+                : { status: 'missing', lessonId });
+              return;
+            }
+
+            if (req.method === 'POST') {
+              const body = await readRequestJson<{ lessonId?: string; sourcePath?: string }>(req);
+              if (!body.lessonId || !body.sourcePath) {
+                sendJson(res, 400, { error: 'Missing preview payload.' });
+                return;
+              }
+              if (!isInsideCourseRoot(body.sourcePath) || !body.sourcePath.toLowerCase().endsWith('.pptx')) {
+                sendJson(res, 403, { error: 'PPTX source is not available for conversion.' });
+                return;
+              }
+              const preview = await convertPptxPreview(body.lessonId, body.sourcePath);
+              sendJson(res, 200, { status: 'ready', ...preview });
+              return;
+            }
+
+            sendJson(res, 405, { error: 'Method not allowed.' });
+          } catch (error) {
+            sendJson(res, 500, {
+              error: error instanceof Error ? error.message : 'Failed to convert PPTX preview.',
             });
           }
         });

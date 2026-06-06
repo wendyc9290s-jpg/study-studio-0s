@@ -17,6 +17,14 @@ function dataPath(kind: DataKind, lessonId: string): string {
   return path.join(DATA_ROOT, kind, `${safeId(lessonId)}.json`);
 }
 
+export function previewPdfPath(lessonId: string): string {
+  return path.join(DATA_ROOT, 'previews', `${safeId(lessonId)}.pdf`);
+}
+
+export function previewPdfUrl(lessonId: string): string {
+  return `/api/preview-file?id=${encodeURIComponent(lessonId)}`;
+}
+
 export async function jsonDataExists(kind: DataKind, lessonId: string): Promise<boolean> {
   try {
     await fs.access(dataPath(kind, lessonId));
