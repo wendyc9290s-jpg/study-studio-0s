@@ -11,6 +11,7 @@ import {
   UploadPlaceholder,
 } from './pages/placeholders';
 import { LifePage } from './pages/LifePage';
+import { CourseCenterPage } from './pages/CourseCenterPage';
 
 export function AppRoutes() {
   return (
@@ -22,6 +23,7 @@ export function AppRoutes() {
       <Route path="/study/plan" element={<PlanPage />} />
       <Route path="/study/resource" element={<ResourcePage />} />
       <Route path="/study/upload" element={<UploadPlaceholder />} />
+      <Route path="/study/course-center" element={<CourseCenterPage />} />
       <Route path="/study/modes" element={<StudyModesPage />} />
       <Route path="/study/ai" element={<AiPlaceholder />} />
       <Route path="/life" element={<LifePage />} />

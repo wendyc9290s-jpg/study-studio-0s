@@ -20,6 +20,7 @@ const STUDY: NavItem[] = [
   { to: '/study/plan',      label: '4-Month Plan',    icon: '▦' },
   { to: '/study/resource',  label: 'Resources',       icon: '◫' },
   { to: '/study/upload',    label: 'Upload & Extract',icon: '↑' },
+  { to: '/study/course-center', label: 'Course Center', icon: '▤' },
   { to: '/study/modes',     label: 'Study Modes',     icon: '◑' },
   { to: '/study/ai',        label: 'AI Agent',        icon: '✦' },
 ];
