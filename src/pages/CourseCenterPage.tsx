@@ -1,4 +1,4 @@
-import { type PointerEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { type ChangeEvent, type ClipboardEvent, type PointerEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '../lib/escape';
 import styles from './CourseCenterPage.module.css';
 
@@ -116,8 +116,12 @@ export function CourseCenterPage() {
   const [annotationDirty, setAnnotationDirty] = useState(false);
   const [annotationTool, setAnnotationTool] = useState<AnnotationTool>('select');
   const [annotationColor, setAnnotationColor] = useState('#f59e0b');
+  const [noteColor, setNoteColor] = useState('#f59e0b');
+  const [noteHighlight, setNoteHighlight] = useState('#fde68a');
   const [draftAnnotation, setDraftAnnotation] = useState<Annotation | null>(null);
   const annotationSurfaceRef = useRef<HTMLDivElement>(null);
+  const noteEditorRef = useRef<HTMLDivElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -167,17 +171,24 @@ export function CourseCenterPage() {
   useEffect(() => {
     if (!selectedLesson) return;
     const lessonId = selectedLesson.id;
+    const noteSourcePath = selectedLesson.notes?.path;
     let cancelled = false;
     setNoteSaveState('loading');
     setNoteDirty(false);
 
     async function loadNote() {
       try {
-        const response = await fetch(`/api/lesson-note?id=${encodeURIComponent(lessonId)}`);
+        const params = new URLSearchParams({ id: lessonId });
+        if (noteSourcePath) params.set('sourcePath', noteSourcePath);
+        const response = await fetch(`/api/lesson-note?${params.toString()}`);
         if (!response.ok) throw new Error('Could not load note');
         const note = (await response.json()) as { content?: string };
         if (!cancelled) {
-          setNoteContent(note.content ?? '');
+          const content = note.content ?? '';
+          setNoteContent(content);
+          window.requestAnimationFrame(() => {
+            if (noteEditorRef.current) noteEditorRef.current.innerHTML = content;
+          });
           setNoteSaveState('saved');
         }
       } catch {
@@ -339,6 +350,69 @@ export function CourseCenterPage() {
     if (!window.confirm('Clear all annotations for this lesson?')) return;
     setAnnotations([]);
     setAnnotationDirty(true);
+  }
+
+  function syncEditorContent() {
+    setNoteContent(noteEditorRef.current?.innerHTML ?? '');
+    setNoteDirty(true);
+  }
+
+  function runEditorCommand(command: string, value?: string) {
+    noteEditorRef.current?.focus();
+    document.execCommand(command, false, value);
+    syncEditorContent();
+  }
+
+  function formatBlock(tagName: 'p' | 'h2' | 'h3') {
+    runEditorCommand('formatBlock', tagName);
+  }
+
+  function fileToDataUrl(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') resolve(reader.result);
+        else reject(new Error('Could not read image.'));
+      };
+      reader.onerror = () => reject(reader.error ?? new Error('Could not read image.'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function uploadAndInsertImage(file: File) {
+    if (!selectedLesson) return;
+    setNoteSaveState('saving');
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      const response = await fetch('/api/attachment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lessonId: selectedLesson.id,
+          fileName: file.name,
+          mimeType: file.type || 'image/png',
+          dataUrl,
+        }),
+      });
+      if (!response.ok) throw new Error('Image upload failed.');
+      const attachment = (await response.json()) as { url: string };
+      runEditorCommand('insertHTML', `<img src="${attachment.url}" alt="">`);
+    } catch {
+      setNoteSaveState('error');
+    }
+  }
+
+  function handleImageInput(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = '';
+    if (file) uploadAndInsertImage(file);
+  }
+
+  function handleNotePaste(event: ClipboardEvent<HTMLDivElement>) {
+    const image = Array.from(event.clipboardData.files).find(file => file.type.startsWith('image/'));
+    if (!image) return;
+    event.preventDefault();
+    uploadAndInsertImage(image);
   }
 
   function renderAnnotation(annotation: Annotation) {
@@ -559,14 +633,57 @@ export function CourseCenterPage() {
 
                   {selectedLesson.notes ? (
                     <>
-                      <textarea
+                      <div className={styles.noteToolbar} aria-label="Notes formatting tools">
+                        <button type="button" className={styles.toolButton} onMouseDown={event => event.preventDefault()} onClick={() => formatBlock('h2')}>H2</button>
+                        <button type="button" className={styles.toolButton} onMouseDown={event => event.preventDefault()} onClick={() => formatBlock('h3')}>H3</button>
+                        <button type="button" className={styles.toolButton} onMouseDown={event => event.preventDefault()} onClick={() => formatBlock('p')}>P</button>
+                        <button type="button" className={styles.toolButton} onMouseDown={event => event.preventDefault()} onClick={() => runEditorCommand('bold')}>B</button>
+                        <button type="button" className={styles.toolButton} onMouseDown={event => event.preventDefault()} onClick={() => runEditorCommand('italic')}>I</button>
+                        <button type="button" className={styles.toolButton} onMouseDown={event => event.preventDefault()} onClick={() => runEditorCommand('insertUnorderedList')}>List</button>
+                        <button type="button" className={styles.toolButton} onMouseDown={event => event.preventDefault()} onClick={() => runEditorCommand('insertOrderedList')}>1.</button>
+                        <label className={styles.colorTool}>
+                          <span>Text</span>
+                          <input
+                            className={styles.colorInput}
+                            type="color"
+                            value={noteColor}
+                            onChange={event => {
+                              setNoteColor(event.currentTarget.value);
+                              runEditorCommand('foreColor', event.currentTarget.value);
+                            }}
+                          />
+                        </label>
+                        <label className={styles.colorTool}>
+                          <span>Highlight</span>
+                          <input
+                            className={styles.colorInput}
+                            type="color"
+                            value={noteHighlight}
+                            onChange={event => {
+                              setNoteHighlight(event.currentTarget.value);
+                              runEditorCommand('hiliteColor', event.currentTarget.value);
+                            }}
+                          />
+                        </label>
+                        <button type="button" className={styles.toolButton} onClick={() => imageInputRef.current?.click()}>Image</button>
+                        <input
+                          ref={imageInputRef}
+                          type="file"
+                          accept="image/png,image/jpeg,image/webp"
+                          className={styles.hiddenInput}
+                          onChange={handleImageInput}
+                        />
+                      </div>
+
+                      <div
+                        ref={noteEditorRef}
                         className={styles.noteEditor}
-                        value={noteContent}
-                        placeholder="Write lesson notes here. This local note autosaves into data/notes."
-                        onChange={event => {
-                          setNoteContent(event.currentTarget.value);
-                          setNoteDirty(true);
-                        }}
+                        contentEditable
+                        role="textbox"
+                        aria-multiline="true"
+                        data-placeholder="Write lesson notes here. Paste screenshots or use Image to insert pictures."
+                        onInput={syncEditorContent}
+                        onPaste={handleNotePaste}
                       />
                       <div className={styles.noteSource}>
                         Source DOCX: <span>{selectedLesson.notes.path}</span>

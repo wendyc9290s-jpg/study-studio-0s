@@ -289,6 +289,15 @@
   border-bottom: 1px solid var(--border);
 }
 
+.noteToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
 .toolButton {
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -313,6 +322,14 @@
   opacity: 0.45;
 }
 
+.colorTool {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
 .colorInput {
   width: 34px;
   height: 26px;
@@ -320,6 +337,10 @@
   border-radius: var(--radius);
   background: var(--surface);
   cursor: pointer;
+}
+
+.hiddenInput {
+  display: none;
 }
 
 .pdfStage {
@@ -359,7 +380,7 @@
 .noteEditor {
   flex: 1;
   min-height: 520px;
-  resize: vertical;
+  overflow: auto;
   border: 0;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
@@ -370,9 +391,44 @@
   padding: var(--space-4);
 }
 
+.noteEditor:empty::before {
+  content: attr(data-placeholder);
+  color: var(--subtle);
+}
+
 .noteEditor:focus {
   outline: 1px solid var(--accent);
   outline-offset: -1px;
+}
+
+.noteEditor h2,
+.noteEditor h3,
+.noteEditor p,
+.noteEditor ul,
+.noteEditor ol {
+  margin: 0 0 var(--space-3) 0;
+}
+
+.noteEditor h2 {
+  font-size: var(--text-lg);
+}
+
+.noteEditor h3 {
+  font-size: var(--text-md);
+}
+
+.noteEditor img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: var(--space-3) 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.noteEditor ul,
+.noteEditor ol {
+  padding-left: var(--space-5);
 }
 
 .noteSource {
