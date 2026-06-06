@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { type PointerEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '../lib/escape';
 import styles from './CourseCenterPage.module.css';
 
@@ -44,6 +44,42 @@ type LoadState =
   | { status: 'ready'; index: CourseIndex }
   | { status: 'error'; message: string };
 
+type AnnotationTool = 'select' | 'pen' | 'highlight' | 'text';
+type SaveState = 'idle' | 'loading' | 'saving' | 'saved' | 'error';
+
+interface Point {
+  x: number;
+  y: number;
+}
+
+interface PenAnnotation {
+  id: string;
+  type: 'pen';
+  color: string;
+  points: Point[];
+}
+
+interface HighlightAnnotation {
+  id: string;
+  type: 'highlight';
+  color: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+interface TextAnnotation {
+  id: string;
+  type: 'text';
+  color: string;
+  x: number;
+  y: number;
+  text: string;
+}
+
+type Annotation = PenAnnotation | HighlightAnnotation | TextAnnotation;
+
 function fileBadge(type: string): string {
   return type.toUpperCase();
 }
@@ -52,10 +88,36 @@ function previewUrl(filePath: string): string {
   return `/api/course-file?path=${encodeURIComponent(filePath)}`;
 }
 
+function newId(): string {
+  return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 7)}`;
+}
+
+function saveLabel(state: SaveState): string {
+  if (state === 'loading') return 'Loading';
+  if (state === 'saving') return 'Saving';
+  if (state === 'saved') return 'Saved';
+  if (state === 'error') return 'Save error';
+  return 'Ready';
+}
+
+function clamp(value: number): number {
+  return Math.min(1, Math.max(0, value));
+}
+
 export function CourseCenterPage() {
   const [loadState, setLoadState] = useState<LoadState>({ status: 'loading' });
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
+  const [noteContent, setNoteContent] = useState('');
+  const [noteSaveState, setNoteSaveState] = useState<SaveState>('idle');
+  const [noteDirty, setNoteDirty] = useState(false);
+  const [annotations, setAnnotations] = useState<Annotation[]>([]);
+  const [annotationSaveState, setAnnotationSaveState] = useState<SaveState>('idle');
+  const [annotationDirty, setAnnotationDirty] = useState(false);
+  const [annotationTool, setAnnotationTool] = useState<AnnotationTool>('select');
+  const [annotationColor, setAnnotationColor] = useState('#f59e0b');
+  const [draftAnnotation, setDraftAnnotation] = useState<Annotation | null>(null);
+  const annotationSurfaceRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -100,6 +162,229 @@ export function CourseCenterPage() {
   function selectCourse(course: CourseEntry) {
     setSelectedCourseId(course.id);
     setSelectedLessonId(course.lessons[0]?.id ?? null);
+  }
+
+  useEffect(() => {
+    if (!selectedLesson) return;
+    const lessonId = selectedLesson.id;
+    let cancelled = false;
+    setNoteSaveState('loading');
+    setNoteDirty(false);
+
+    async function loadNote() {
+      try {
+        const response = await fetch(`/api/lesson-note?id=${encodeURIComponent(lessonId)}`);
+        if (!response.ok) throw new Error('Could not load note');
+        const note = (await response.json()) as { content?: string };
+        if (!cancelled) {
+          setNoteContent(note.content ?? '');
+          setNoteSaveState('saved');
+        }
+      } catch {
+        if (!cancelled) setNoteSaveState('error');
+      }
+    }
+
+    loadNote();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedLesson]);
+
+  useEffect(() => {
+    if (!selectedLesson || !noteDirty) return;
+    const timer = window.setTimeout(async () => {
+      setNoteSaveState('saving');
+      try {
+        await fetch('/api/lesson-note', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lessonId: selectedLesson.id, content: noteContent }),
+        });
+        setNoteDirty(false);
+        setNoteSaveState('saved');
+      } catch {
+        setNoteSaveState('error');
+      }
+    }, 500);
+
+    return () => window.clearTimeout(timer);
+  }, [noteContent, noteDirty, selectedLesson]);
+
+  useEffect(() => {
+    if (!selectedLesson) return;
+    const lessonId = selectedLesson.id;
+    let cancelled = false;
+    setAnnotationSaveState('loading');
+    setAnnotationDirty(false);
+    setDraftAnnotation(null);
+
+    async function loadAnnotations() {
+      try {
+        const response = await fetch(`/api/annotations?id=${encodeURIComponent(lessonId)}`);
+        if (!response.ok) throw new Error('Could not load annotations');
+        const payload = (await response.json()) as { items?: Annotation[] };
+        if (!cancelled) {
+          setAnnotations(Array.isArray(payload.items) ? payload.items : []);
+          setAnnotationSaveState('saved');
+        }
+      } catch {
+        if (!cancelled) setAnnotationSaveState('error');
+      }
+    }
+
+    loadAnnotations();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedLesson]);
+
+  useEffect(() => {
+    if (!selectedLesson || !annotationDirty) return;
+    const timer = window.setTimeout(async () => {
+      setAnnotationSaveState('saving');
+      try {
+        await fetch('/api/annotations', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lessonId: selectedLesson.id, items: annotations }),
+        });
+        setAnnotationDirty(false);
+        setAnnotationSaveState('saved');
+      } catch {
+        setAnnotationSaveState('error');
+      }
+    }, 400);
+
+    return () => window.clearTimeout(timer);
+  }, [annotationDirty, annotations, selectedLesson]);
+
+  function pointFromEvent(event: PointerEvent<HTMLElement>): Point {
+    const rect = annotationSurfaceRef.current?.getBoundingClientRect();
+    if (!rect) return { x: 0, y: 0 };
+    return {
+      x: clamp((event.clientX - rect.left) / rect.width),
+      y: clamp((event.clientY - rect.top) / rect.height),
+    };
+  }
+
+  function handleAnnotationDown(event: PointerEvent<HTMLDivElement>) {
+    if (annotationTool === 'select') return;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    const point = pointFromEvent(event);
+
+    if (annotationTool === 'text') {
+      const text = window.prompt('Annotation text');
+      if (!text?.trim()) return;
+      setAnnotations(items => [
+        ...items,
+        { id: newId(), type: 'text', color: annotationColor, x: point.x, y: point.y, text: text.trim() },
+      ]);
+      setAnnotationDirty(true);
+      return;
+    }
+
+    if (annotationTool === 'pen') {
+      setDraftAnnotation({ id: newId(), type: 'pen', color: annotationColor, points: [point] });
+      return;
+    }
+
+    setDraftAnnotation({
+      id: newId(),
+      type: 'highlight',
+      color: annotationColor,
+      x: point.x,
+      y: point.y,
+      width: 0,
+      height: 0,
+    });
+  }
+
+  function handleAnnotationMove(event: PointerEvent<HTMLDivElement>) {
+    if (!draftAnnotation) return;
+    const point = pointFromEvent(event);
+
+    if (draftAnnotation.type === 'pen') {
+      setDraftAnnotation({
+        ...draftAnnotation,
+        points: [...draftAnnotation.points, point],
+      });
+      return;
+    }
+
+    if (draftAnnotation.type === 'highlight') {
+      setDraftAnnotation({
+        ...draftAnnotation,
+        width: point.x - draftAnnotation.x,
+        height: point.y - draftAnnotation.y,
+      });
+    }
+  }
+
+  function commitDraftAnnotation() {
+    if (!draftAnnotation) return;
+    setAnnotations(items => [...items, draftAnnotation]);
+    setDraftAnnotation(null);
+    setAnnotationDirty(true);
+  }
+
+  function undoAnnotation() {
+    setAnnotations(items => items.slice(0, -1));
+    setAnnotationDirty(true);
+  }
+
+  function clearAnnotations() {
+    if (!window.confirm('Clear all annotations for this lesson?')) return;
+    setAnnotations([]);
+    setAnnotationDirty(true);
+  }
+
+  function renderAnnotation(annotation: Annotation) {
+    if (annotation.type === 'pen') {
+      return (
+        <polyline
+          key={annotation.id}
+          points={annotation.points.map(point => `${point.x * 100},${point.y * 100}`).join(' ')}
+          fill="none"
+          stroke={annotation.color}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="0.45"
+        />
+      );
+    }
+
+    if (annotation.type === 'highlight') {
+      const x = Math.min(annotation.x, annotation.x + annotation.width);
+      const y = Math.min(annotation.y, annotation.y + annotation.height);
+      return (
+        <rect
+          key={annotation.id}
+          x={x * 100}
+          y={y * 100}
+          width={Math.abs(annotation.width) * 100}
+          height={Math.abs(annotation.height) * 100}
+          fill={annotation.color}
+          opacity="0.28"
+          rx="0.4"
+        />
+      );
+    }
+
+    return (
+      <text
+        key={annotation.id}
+        x={annotation.x * 100}
+        y={annotation.y * 100}
+        fill={annotation.color}
+        fontSize="2.2"
+        fontWeight="700"
+      >
+        {annotation.text}
+      </text>
+    );
   }
 
   if (loadState.status === 'loading') {
@@ -187,15 +472,59 @@ export function CourseCenterPage() {
                       <span className={styles.assetLabel}>Lecture Material</span>
                       <p className={styles.assetName}>{selectedLesson.material?.fileName ?? 'No matched material'}</p>
                     </div>
-                    <span className={styles.assetType}>{selectedLesson.material ? fileBadge(selectedLesson.material.type) : 'Missing'}</span>
+                    <div className={styles.toolbarRight}>
+                      <span className={styles.saveState}>{saveLabel(annotationSaveState)}</span>
+                      <span className={styles.assetType}>{selectedLesson.material ? fileBadge(selectedLesson.material.type) : 'Missing'}</span>
+                    </div>
                   </div>
 
                   {selectedLesson.material?.type === 'pdf' && (
-                    <iframe
-                      className={styles.pdfFrame}
-                      title={`${selectedLesson.title} PDF preview`}
-                      src={previewUrl(selectedLesson.material.path)}
-                    />
+                    <>
+                      <div className={styles.annotationToolbar} aria-label="PDF annotation tools">
+                        {(['select', 'pen', 'highlight', 'text'] as const).map(tool => (
+                          <button
+                            key={tool}
+                            type="button"
+                            className={cn(styles.toolButton, annotationTool === tool ? styles.toolButtonActive : undefined)}
+                            onClick={() => setAnnotationTool(tool)}
+                          >
+                            {tool}
+                          </button>
+                        ))}
+                        <input
+                          className={styles.colorInput}
+                          type="color"
+                          value={annotationColor}
+                          onChange={event => setAnnotationColor(event.currentTarget.value)}
+                          aria-label="Annotation color"
+                        />
+                        <button type="button" className={styles.toolButton} onClick={undoAnnotation} disabled={annotations.length === 0}>
+                          undo
+                        </button>
+                        <button type="button" className={styles.toolButton} onClick={clearAnnotations} disabled={annotations.length === 0}>
+                          clear
+                        </button>
+                      </div>
+
+                      <div
+                        ref={annotationSurfaceRef}
+                        className={cn(styles.pdfStage, annotationTool !== 'select' ? styles.pdfStageAnnotating : undefined)}
+                        onPointerDown={handleAnnotationDown}
+                        onPointerMove={handleAnnotationMove}
+                        onPointerUp={commitDraftAnnotation}
+                        onPointerCancel={() => setDraftAnnotation(null)}
+                      >
+                        <iframe
+                          className={styles.pdfFrame}
+                          title={`${selectedLesson.title} PDF preview`}
+                          src={previewUrl(selectedLesson.material.path)}
+                        />
+                        <svg className={styles.annotationLayer} viewBox="0 0 100 100" preserveAspectRatio="none">
+                          {annotations.map(renderAnnotation)}
+                          {draftAnnotation && renderAnnotation(draftAnnotation)}
+                        </svg>
+                      </div>
+                    </>
                   )}
 
                   {selectedLesson.material?.type === 'pptx' && (
@@ -222,17 +551,27 @@ export function CourseCenterPage() {
                       <span className={styles.assetLabel}>Notes</span>
                       <p className={styles.assetName}>{selectedLesson.notes?.fileName ?? 'No matched notes'}</p>
                     </div>
-                    <span className={styles.assetType}>{selectedLesson.notes ? 'DOCX' : 'Missing'}</span>
+                    <div className={styles.toolbarRight}>
+                      <span className={styles.saveState}>{saveLabel(noteSaveState)}</span>
+                      <span className={styles.assetType}>{selectedLesson.notes ? 'DOCX' : 'Missing'}</span>
+                    </div>
                   </div>
 
                   {selectedLesson.notes ? (
-                    <div className={styles.notesPlaceholder}>
-                      <div className={styles.placeholderTitle}>Notes editor pending</div>
-                      <p>
-                        This DOCX is paired with the lesson. The next notes stage will import it into a local editable note with autosave.
-                      </p>
-                      <p className={styles.pathText}>{selectedLesson.notes.path}</p>
-                    </div>
+                    <>
+                      <textarea
+                        className={styles.noteEditor}
+                        value={noteContent}
+                        placeholder="Write lesson notes here. This local note autosaves into data/notes."
+                        onChange={event => {
+                          setNoteContent(event.currentTarget.value);
+                          setNoteDirty(true);
+                        }}
+                      />
+                      <div className={styles.noteSource}>
+                        Source DOCX: <span>{selectedLesson.notes.path}</span>
+                      </div>
+                    </>
                   ) : (
                     <div className={styles.notesPlaceholder}>
                       <div className={styles.placeholderTitle}>No notes document</div>

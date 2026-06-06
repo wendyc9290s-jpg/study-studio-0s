@@ -219,8 +219,20 @@
 .paneToolbar {
   min-height: 70px;
   padding: var(--space-3) var(--space-4);
-  margin-bottom: var(--space-3);
   border-bottom: 1px solid var(--border);
+}
+
+.toolbarRight {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.saveState {
+  color: var(--subtle);
+  font-size: var(--text-xs);
+  font-family: var(--font-mono);
+  white-space: nowrap;
 }
 
 .assetLabel {
@@ -260,7 +272,7 @@
 
 .viewerPane {
   display: grid;
-  grid-template-rows: auto minmax(420px, 1fr);
+  grid-template-rows: auto auto minmax(420px, 1fr);
 }
 
 .notesPane {
@@ -268,13 +280,111 @@
   flex-direction: column;
 }
 
-.pdfFrame {
+.annotationToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.toolButton {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  padding: 4px 9px;
+  transition: border-color var(--t), color var(--t), background var(--t);
+}
+
+.toolButton:hover:not(:disabled),
+.toolButtonActive {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.toolButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.colorInput {
+  width: 34px;
+  height: 26px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+}
+
+.pdfStage {
+  position: relative;
+  min-height: 620px;
+  background: #ffffff;
+}
+
+.pdfFrame,
+.annotationLayer {
   display: block;
   width: 100%;
   height: 100%;
   min-height: 620px;
+}
+
+.pdfFrame {
   border: 0;
   background: #ffffff;
+}
+
+.pdfStageAnnotating .pdfFrame {
+  pointer-events: none;
+}
+
+.annotationLayer {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.pdfStageAnnotating {
+  cursor: crosshair;
+}
+
+.noteEditor {
+  flex: 1;
+  min-height: 520px;
+  resize: vertical;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  line-height: 1.65;
+  padding: var(--space-4);
+}
+
+.noteEditor:focus {
+  outline: 1px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.noteSource {
+  color: var(--subtle);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  padding: var(--space-3) var(--space-4);
+  overflow-wrap: anywhere;
+}
+
+.noteSource span {
+  font-family: var(--font-mono);
 }
 
 .previewPlaceholder,
